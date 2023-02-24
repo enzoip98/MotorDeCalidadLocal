@@ -3,13 +3,13 @@ from typing import List
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import *
 from pyspark.sql.types import StructType,StructField,StringType,BooleanType,DoubleType,LongType,DecimalType, IntegerType, DateType, ShortType, TimestampType
-from motordecalidad.constants import *
+from motordecalidadlocal.constants import *
 import datetime
 import time
-from motordecalidad.rules import *
+from motordecalidadlocal.rules import *
 
 
-print("Motor de Calidad Version Local 1.3")
+print("Motor de Calidad Version Local 1.4")
 
 # Main function, Invokes all the parameters from the json, Optionally filters, starts the rule validation
 # Writes and returns the summary of the validation 
@@ -68,7 +68,7 @@ def readDf(input):
         user = input.get(JsonParts.DBUser)
         password = input.get(JsonParts.DBPassword)
         url = f"jdbc:mysql://{database_host}:{database_port}/{database_name}"
-        return spark.read.format("jdbc").option("driver", driver).option("url", url).option("dbtable", table).option("user", user).load()
+        return spark.read.format("jdbc").option("driver", driver).option("url", url).option("dbtable", table).option("user", user).option("password", password).load()
     elif type == "teradata" :
         driver = "com.jdbc.teradata.TeradataDriver"
         database_host = input.get(JsonParts.Host)
@@ -94,7 +94,7 @@ def readDf(input):
 # Function that writes the output dataframe with the overwrite method
 def writeDf(object:DataFrame,output):
     header:bool = output.get(JsonParts.Header)
-    object.coalesce(One).write.mode("overwrite").option("delimiter",str(output.get(JsonParts.Delimiter))).option("header",header).csv(str(output.get(JsonParts.Path)))
+    object.coalesce(One).write.partitionBy("FECHA_EJECUCION_REGLA").mode("append").option("delimiter",str(output.get(JsonParts.Delimiter))).option("header",header).csv(str(output.get(JsonParts.Path)))
     print("Se escribio en el blob")
 
 def applyFilter(object:DataFrame, filtered) :
@@ -445,7 +445,7 @@ def validateRules(object:DataFrame,rules:dict,registerAmount:int, entity: str, p
         SubDomain.value(lit(subDomain)),
         Segment.value(lit(segment)),
         Area.value(lit(area)),
-        AuditDate.value(lit(datetime.date.today().strftime("%Y-%m-%d"))),
+        AuditDate.value(lit(datetime.date.today().strftime("%Y/%m/%d %H:%M:%S"))),
         FunctionCode.column,
         RuleCode.column,
         DataRequirement.column,

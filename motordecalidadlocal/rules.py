@@ -1,7 +1,7 @@
 from typing import List
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import to_date,regexp_replace,concat_ws,length,split, lit, collect_list
-from motordecalidad.constants import *
+from motordecalidadlocal.constants import *
 import operator
 from pyspark.sql.types import StructType,StructField
 
