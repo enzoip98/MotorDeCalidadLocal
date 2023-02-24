@@ -4,7 +4,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import *
 from pyspark.sql.types import StructType,StructField,StringType,BooleanType,DoubleType,LongType,DecimalType, IntegerType, DateType, ShortType, TimestampType
 from motordecalidadlocal.constants import *
-import datetime
+from datetime import datetime
 import time
 from motordecalidadlocal.rules import *
 
@@ -137,7 +137,7 @@ def createErrorData(object:DataFrame) :
     return spark.createDataFrame(spark.sparkContext.emptyRDD(), schema)
 #Function that validate rules going through the defined options
 def validateRules(object:DataFrame,rules:dict,registerAmount:int, entity: str, project:str,country: str,domain: str,subDomain: str,segment: str,area: str,error,dataDate:str,validData:str, Data,sendEmail,email,output):
-    runTime = datetime.datetime.now()
+    runTime = datetime.now()
     errorData = createErrorData(object)
     rulesData:List = []
     rulesNumber = 0
@@ -445,7 +445,7 @@ def validateRules(object:DataFrame,rules:dict,registerAmount:int, entity: str, p
         SubDomain.value(lit(subDomain)),
         Segment.value(lit(segment)),
         Area.value(lit(area)),
-        AuditDate.value(lit(datetime.date.today().strftime("%Y/%m/%d %H:%M:%S"))),
+        AuditDate.value(lit(datetime.now().strftime("%Y%m%d%H%M%S"))),
         FunctionCode.column,
         RuleCode.column,
         DataRequirement.column,
