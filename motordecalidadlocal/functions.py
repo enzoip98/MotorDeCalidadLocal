@@ -9,11 +9,11 @@ import time
 from motordecalidadlocal.rules import *
 
 
-print("Motor de Calidad Version Local 1.4")
+print("Motor de Calidad Version Local 1.5")
 
 # Main function, Invokes all the parameters from the json, Optionally filters, starts the rule validation
 # Writes and returns the summary of the validation 
-def startValidation(inputspark,config,dfltPath=""):
+def startValidation(inputspark,config,dfltPath="",dataDate="2000-01-01"):
     global spark
     global dbutils
     global DefaultPath
@@ -94,8 +94,15 @@ def readDf(input):
 # Function that writes the output dataframe with the overwrite method
 def writeDf(object:DataFrame,output):
     header:bool = output.get(JsonParts.Header)
-    object.coalesce(One).write.partitionBy("FECHA_EJECUCION_REGLA").mode("append").option("delimiter",str(output.get(JsonParts.Delimiter))).option("header",header).csv(str(output.get(JsonParts.Path)))
-    print("Se escribio en el blob")
+    partitions:List = output.get(JsonParts.Partitions)
+    try:
+        if len(partitions) > Zero :
+            object.coalesce(One).write.partitionBy(*partitions).mode("append").option("partitionOverwriteMode", "dynamic").option("delimiter",str(output.get(JsonParts.Delimiter))).option("header",header).csv(str(output.get(JsonParts.Path)))
+        else:
+            object.coalesce(One).write.mode("append").option("delimiter",str(output.get(JsonParts.Delimiter))).option("header",header).csv(str(output.get(JsonParts.Path)))
+    except:
+        object.coalesce(One).write.mode("append").option("delimiter",str(output.get(JsonParts.Delimiter))).csv(str(output.get(JsonParts.Path)))
+    print("Se escribio el archivo")
 
 def applyFilter(object:DataFrame, filtered) :
     try:
@@ -435,6 +442,7 @@ def validateRules(object:DataFrame,rules:dict,registerAmount:int, entity: str, p
     except:
         pass
     validationData:DataFrame = spark.createDataFrame(data = rulesData, schema = OutputDataFrameColumns)
+    auditDate = datetime.now().strftime("%Y%m%d%H%M%S")
     return validationData.select(
         DataDate.value(lit(dataDate)),
         CountryId.value(lit(country.upper())),
@@ -445,7 +453,7 @@ def validateRules(object:DataFrame,rules:dict,registerAmount:int, entity: str, p
         SubDomain.value(lit(subDomain)),
         Segment.value(lit(segment)),
         Area.value(lit(area)),
-        AuditDate.value(lit(datetime.now().strftime("%Y%m%d%H%M%S"))),
+        AuditDate.value(lit(auditDate)),
         FunctionCode.column,
         RuleCode.column,
         DataRequirement.column,
