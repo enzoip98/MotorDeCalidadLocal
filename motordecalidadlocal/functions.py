@@ -70,13 +70,13 @@ def readDf(input):
         url = f"jdbc:mysql://{database_host}:{database_port}/{database_name}"
         return spark.read.format("jdbc").option("driver", driver).option("url", url).option("dbtable", table).option("user", user).option("password", password).load()
     elif type == "teradata" :
-        driver = "com.jdbc.teradata.TeradataDriver"
+        driver = "com.teradata.jdbc.TeradataDriver"
         database_host = input.get(JsonParts.Host)
         database_name = input.get(JsonParts.DBName)
         table = input.get(JsonParts.DBTable)
         user = input.get(JsonParts.DBUser)
         password = input.get(JsonParts.DBPassword)
-        url = f"jdbc:teradata://{database_host}/Database={database_name},LOGMECH=LDAP"
+        url = f"jdbc:teradata://{database_host}/Database={database_name}"
         return spark.read.format ("jdbc")\
         .option ("driver", driver)\
         .option ("url", url)\
@@ -101,7 +101,7 @@ def writeDf(object:DataFrame,output):
         else:
             object.coalesce(One).write.mode("append").option("delimiter",str(output.get(JsonParts.Delimiter))).option("header",header).csv(str(output.get(JsonParts.Path)))
     except:
-        object.coalesce(One).write.mode("append").option("delimiter",str(output.get(JsonParts.Delimiter))).csv(str(output.get(JsonParts.Path)))
+        object.coalesce(One).write.mode("append").option("delimiter",str(output.get(JsonParts.Delimiter))).option("header",header).csv(str(output.get(JsonParts.Path)))
     print("Se escribio el archivo")
 
 def applyFilter(object:DataFrame, filtered) :
